@@ -6,14 +6,17 @@ assert sklearn.__version__ >= "0.20"
 from sklearn.model_selection import StratifiedShuffleSplit
 
 import pandas as pd
+from pandas.plotting import scatter_matrix
+
 import numpy as np
 import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 from zlib import crc32
-import hashlib
+import hashlib  
 
 mpl.rc('axes', labelsize=14)
 mpl.rc('xtick', labelsize=12)
@@ -63,10 +66,41 @@ housing = strat_train_set.copy()
 # save_fig("better_visualization_plot")
 # plt.show()
 
-housing.plot(kind="scatter", x="longitude", y="latitude", alpha=0.4,
-             s=housing["population"]/100, label="population", figsize=(10,7),
-             c="median_house_value", cmap=plt.get_cmap("jet"), colorbar=True,
-             sharex=False)
-plt.legend()
-save_fig("housing_prices_scatterplot")
+california_img=mpimg.imread(IMAGES_PATH + "/california.png")
+
+ax = housing.plot(kind="scatter", x="longitude", y="latitude", figsize=(10,7),
+                  s=housing['population']/100, label="Population",
+                  c="median_house_value", cmap=plt.get_cmap("jet"),
+                  colorbar=False, alpha=0.4)
+
+plt.imshow(california_img, extent=[-124.55, -113.80, 32.45, 42.05], alpha=0.5,
+           cmap=plt.get_cmap("jet"))
+
+plt.ylabel("Latitude", fontsize=14)
+plt.xlabel("Longitude", fontsize=14)
+
+prices = housing["median_house_value"]
+tick_values = np.linspace(prices.min(), prices.max(), 11)
+cbar = plt.colorbar(ticks=tick_values/prices.max())
+cbar.ax.set_yticklabels(["$%dk"%(round(v/1000)) for v in tick_values], fontsize=14)
+cbar.set_label('Median House Value', fontsize=16)
+
+plt.legend(fontsize=16)
+# save_fig("california_housing_prices_plot")
+# plt.show()
+
+corr_matrix = housing.select_dtypes(include=[np.number]).corr()
+corr_matrix["median_house_value"].sort_values(ascending=False)
+# print(corr_matrix)
+
+# attributes = ["median_house_value", "median_income", "total_rooms", "housing_median_age"]
+# scatter_matrix(housing[attributes], figsize=(12,8 ))
+# save_fig("scatter_matrix_plot")
+# plt.show()
+
+housing.plot(kind="scatter", x="median_income", y="median_house_value",
+             alpha=0.1)
+plt.axis([0, 16, 0, 550000])
+save_fig("income_vs_house_value_scatterplot")
 plt.show()
+
